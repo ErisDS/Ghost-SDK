@@ -4,7 +4,7 @@ require('./utils');
 const converter = require('../lib/converter');
 
 describe('Minimal examples', function () {
-    it('Can convert <p>Hello World</p>', function () {
+    it.only('Can convert <p>Hello World</p>', function () {
         const mobiledoc = converter.toMobiledoc('<p>Hello World!</p>');
 
         mobiledoc.should.be.an.Object().with.properties(['version', 'atoms', 'cards', 'markups', 'sections']);
