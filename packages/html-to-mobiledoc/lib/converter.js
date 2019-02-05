@@ -7,6 +7,8 @@ const { JSDOM } = require('jsdom');
 
 require('undom/register');
 
+const {html} = require('lighterhtml');
+
 const withJSDOM = (html, options = {}) => {
     // Vague steps:
     // 1. TODO: sanitize HTML
@@ -27,23 +29,23 @@ const withJSDOM = (html, options = {}) => {
     return mobiledoc;
 };
 
-const withOtherDOM = (html, options = {}) => {
+const withOtherDOM = (htmlString, options = {}) => {
      // Vague steps:
     // 1. TODO: sanitize HTML
-    let sanitizedHTML = html;
+    let sanitizedHTML = htmlString;
 
     // 2. Do something vaguely like loadPost
     // https://github.com/ErisDS/mobiledoc-kit/blob/master/src/js/editor/editor.js#L193
     // We use our parser plugins by default, but this is extensible
     options.plugins = options.plugins || parserPlugins;
     let parser = new HTMLParser(new Builder(), options);
-    let post = parser.parse(sanitizedHTML);
+    let hmm = html`${sanitizedHTML}`;
 
-    console.log('post', post);
+    console.log('hmm', hmm);
 
     // 3. Do something vaguely like serializePost
     // https://github.com/ErisDS/mobiledoc-kit/blob/master/src/js/editor/editor.js#L567
-    let mobiledoc = mobiledocRenderer.render(post, '0.3.1');
+    // let mobiledoc = mobiledocRenderer.render(post, '0.3.1');
 
     return mobiledoc;
 };
