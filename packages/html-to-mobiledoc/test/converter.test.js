@@ -1,6 +1,4 @@
-// Switch these lines once there are useful utils
-// const testUtils = require('./utils');
-require('./utils');
+const testUtils = require('./utils');
 const converter = require('../lib/converter');
 
 describe('Minimal examples', function () {
@@ -143,5 +141,98 @@ describe('Nested examples', function () {
         mobiledoc.sections[0].should.eql([1, 'p', [[0, [], 0, 'Hello']]]);
         mobiledoc.sections[1].should.be.an.Array().with.lengthOf(3);
         mobiledoc.sections[1].should.eql([1, 'p', [[0, [], 0, 'World']]]);
+    });
+});
+
+describe.only('Advanced examples', function () {
+    it('Can convert kg image gallery', function () {
+        const mobiledoc = converter.toMobiledoc(testUtils.fixtures.readSync('kg-image-gallery.html'));
+
+        mobiledoc.should.be.an.Object().with.properties(['version', 'atoms', 'cards', 'markups', 'sections']);
+
+        // // Most of the object is empty
+        mobiledoc.atoms.should.be.an.Array().with.lengthOf(0);
+        mobiledoc.markups.should.be.an.Array().with.lengthOf(0);
+
+        // Only version, sections and cards are populated
+        mobiledoc.version.should.eql('0.3.1');
+        mobiledoc.sections.should.be.an.Array().with.lengthOf(1);
+        mobiledoc.sections[0].should.be.an.Array().with.lengthOf(2);
+
+        mobiledoc.cards.should.be.an.Array().with.lengthOf(1);
+        mobiledoc.cards[0].should.be.an.Array().with.lengthOf(2);
+        mobiledoc.cards[0][0].should.eql('gallery');
+        mobiledoc.cards[0][1].should.be.an.Object().with.properties(['images', 'caption']);
+        mobiledoc.cards[0][1].caption.should.eql('Test Caption');
+        mobiledoc.cards[0][1].images.should.be.an.Array().with.lengthOf(4);
+    });
+
+    it('Can convert graf image gallery', function () {
+        const mobiledoc = converter.toMobiledoc(testUtils.fixtures.readSync('graf-image-gallery.html'));
+
+        mobiledoc.should.be.an.Object().with.properties(['version', 'atoms', 'cards', 'markups', 'sections']);
+
+        console.log(mobiledoc.cards[0][1]);
+
+        // Most of the object is empty
+        mobiledoc.atoms.should.be.an.Array().with.lengthOf(0);
+        mobiledoc.markups.should.be.an.Array().with.lengthOf(0);
+
+        // Only version & sections are populated
+        mobiledoc.version.should.eql('0.3.1');
+        mobiledoc.sections.should.be.an.Array().with.lengthOf(1);
+
+        mobiledoc.cards.should.be.an.Array().with.lengthOf(1);
+        mobiledoc.cards[0].should.be.an.Array().with.lengthOf(2);
+        mobiledoc.cards[0][0].should.eql('gallery');
+        mobiledoc.cards[0][1].should.be.an.Object().with.properties(['images', 'caption']);
+        mobiledoc.cards[0][1].caption.should.eql('Test Caption');
+        mobiledoc.cards[0][1].images.should.be.an.Array().with.lengthOf(4);
+    });
+
+    it('Can convert export image gallery', function () {
+        const mobiledoc = converter.toMobiledoc(testUtils.fixtures.readSync('graf-image-gallery-ex.html'));
+
+        mobiledoc.should.be.an.Object().with.properties(['version', 'atoms', 'cards', 'markups', 'sections']);
+
+        console.log(mobiledoc.cards[0][1]);
+
+        // Most of the object is empty
+        mobiledoc.atoms.should.be.an.Array().with.lengthOf(0);
+        mobiledoc.markups.should.be.an.Array().with.lengthOf(0);
+
+        // Only version & sections are populated
+        mobiledoc.version.should.eql('0.3.1');
+        mobiledoc.sections.should.be.an.Array().with.lengthOf(1);
+
+        mobiledoc.cards.should.be.an.Array().with.lengthOf(1);
+        mobiledoc.cards[0].should.be.an.Array().with.lengthOf(2);
+        mobiledoc.cards[0][0].should.eql('gallery');
+        mobiledoc.cards[0][1].should.be.an.Object().with.properties(['images', 'caption']);
+        mobiledoc.cards[0][1].caption.should.eql('Test Caption');
+        mobiledoc.cards[0][1].images.should.be.an.Array().with.lengthOf(4);
+    });
+
+    it.only('Can handle test export image gallery', function () {
+        const mobiledoc = converter.toMobiledoc(testUtils.fixtures.readSync('test-gallery.html'));
+
+        mobiledoc.should.be.an.Object().with.properties(['version', 'atoms', 'cards', 'markups', 'sections']);
+
+        console.log(mobiledoc.cards[0]);
+
+        // Most of the object is empty
+        // mobiledoc.atoms.should.be.an.Array().with.lengthOf(0);
+        // mobiledoc.markups.should.be.an.Array().with.lengthOf(0);
+
+        // Only version & sections are populated
+        mobiledoc.version.should.eql('0.3.1');
+        // mobiledoc.sections.should.be.an.Array().with.lengthOf(1);
+
+        mobiledoc.cards.should.be.an.Array().with.lengthOf(1);
+        mobiledoc.cards[0].should.be.an.Array().with.lengthOf(2);
+        mobiledoc.cards[0][0].should.eql('gallery');
+        // mobiledoc.cards[0][1].should.be.an.Object().with.properties(['images', 'caption']);
+        // mobiledoc.cards[0][1].caption.should.eql('Test Caption');
+        mobiledoc.cards[0][1].images.should.be.an.Array().with.lengthOf(4);
     });
 });

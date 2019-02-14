@@ -27,8 +27,8 @@ const _readGalleryImageFromNode = (node, row, payload) => {
         fileName,
         row,
         src: node.src,
-        width: node.width,
-        height: node.height
+        width: node.dataset && node.dataset.width ? 10 : node.width,
+        height: node.dataset && node.dataset.height ? 10 : node.height
     };
 
     if (node.alt) {
@@ -102,9 +102,11 @@ const grafGallery = (node, builder, {addSection, nodeFinished}) => {
 
     let cardSection = builder.createCardSection('gallery', galleryPayload);
 
+    console.log(galleryPayload);
+
+    addSection(cardSection);
     rowCount = 0;
     galleryPayload = null;
-    addSection(cardSection);
     nodeFinished();
 };
 
