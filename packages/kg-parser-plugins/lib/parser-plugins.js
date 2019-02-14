@@ -10,6 +10,38 @@
 // @TODO: resolve browser vs node env here
 // import {cleanBasicHtml} from 'koenig-editor/helpers/clean-basic-html';
 
+const _readFigCaptionFromNode = (node, payload) => {
+    let figcaption = node.querySelector('figcaption');
+
+    if (figcaption) {
+        // @TODO: resolve browser vs node env here
+        //let cleanHtml = cleanBasicHtml(figcaption.innerHTML);
+        //payload.caption = cleanHtml;
+        payload.caption = figcaption.innerHTML;
+    }
+};
+
+const _readGalleryImageFromNode = (node, row, payload) => {
+    let fileName = node.src.match(/[^/]*$/)[0];
+    let image = {
+        fileName,
+        row,
+        src: node.src,
+        width: node.width,
+        height: node.height
+    };
+
+    if (node.alt) {
+        image.alt = node.alt;
+    }
+
+    if (node.title) {
+        image.title = node.title;
+    }
+
+    payload.images.push(image);
+};
+
 // mobiledoc by default ignores <BR> tags but we have a custom SoftReturn atom
 const brToSoftBreakAtom = (node, builder, {addMarkerable, nodeFinished}) => {
     if (node.nodeType !== 1 || node.tagName !== 'BR') {
@@ -33,13 +65,87 @@ const removeLeadingNewline = (node) => {
     node.nodeValue = node.nodeValue.replace(/^\n/, '');
 };
 
+let rowCount = 0, galleryPayload;
+
+const nodeIsGrafGallery = (node) => {
+    return node.nodeType === 1 && node.tagName === 'DIV' && node.dataset && node.dataset.paragraphCount && node.querySelectorAll('img').length > 0;
+};
+
+const grafGallery = (node, builder, {addSection, nodeFinished}) => {
+    if (!nodeIsGrafGallery(node)) {
+        return;
+    }
+
+    let imgs = node.querySelectorAll('img');
+
+    if (rowCount === 0) {
+        galleryPayload = {images: []};
+    }
+
+    imgs.forEach((img) => {
+        if (!img.src) {
+            return;
+        }
+
+        _readGalleryImageFromNode(img, rowCount, galleryPayload);
+    });
+
+    // If the next sibling is also a gallery item, we finish this node and return
+    if (node.nextSibling && nodeIsGrafGallery(node.nextSibling)) {
+        rowCount += 1;
+        nodeFinished();
+        return;
+    }
+
+    // Otherwise process the end of the gallery
+    _readFigCaptionFromNode(node, galleryPayload);
+
+    let cardSection = builder.createCardSection('gallery', galleryPayload);
+
+    rowCount = 0;
+    galleryPayload = null;
+    addSection(cardSection);
+    nodeFinished();
+};
+
+const figureToGalleryCard = (node, builder, {addSection, nodeFinished}) => {
+    if (node.nodeType !== 1 || node.tagName !== 'FIGURE') {
+        return;
+    }
+
+    if (!node.className.match(/kg-gallery-card/)) {
+        return;
+    }
+
+    let rows = node.querySelectorAll('.kg-gallery-row');
+    let payload = {
+        images: []
+    };
+
+    rows.forEach((rowNode, rowNum) => {
+        let imgs = rowNode.querySelectorAll('img');
+        imgs.forEach((img) => {
+            if (!img.src) {
+                return;
+            }
+
+            _readGalleryImageFromNode(img, rowNum, payload);
+        });
+    });
+
+    _readFigCaptionFromNode(node, payload);
+
+    let cardSection = builder.createCardSection('gallery', payload);
+    addSection(cardSection);
+    nodeFinished();
+};
+
 const figureToImageCard = (node, builder, {addSection, nodeFinished}) => {
     if (node.nodeType !== 1 || node.tagName !== 'FIGURE') {
         return;
     }
 
     let img = node.querySelector('img');
-    let figcaption = node.querySelector('figcaption');
     let kgClass = node.className.match(/kg-width-(wide|full)/);
     let grafClass = node.className.match(/graf--layout(FillWidth|OutsetCenter)/);
 
@@ -59,12 +165,7 @@ const figureToImageCard = (node, builder, {addSection, nodeFinished}) => {
         payload.cardWidth = grafClass[1] === 'FillWidth' ? 'full' : 'wide';
     }
 
-    if (figcaption) {
-        // @TODO: resolve browser vs node env here
-        //let cleanHtml = cleanBasicHtml(figcaption.innerHTML);
-        //payload.caption = cleanHtml;
-        payload.caption = figcaption.innerHTML;
-    }
+    _readFigCaptionFromNode(node, payload);
 
     let cardSection = builder.createCardSection('image', payload);
     addSection(cardSection);
@@ -115,6 +216,8 @@ const preCodeToCard = (node, builder, {addSection, nodeFinished}) => {
 module.exports = [
     brToSoftBreakAtom,
     removeLeadingNewline,
+    grafGallery,
+    figureToGalleryCard,
     figureToImageCard,
     imgToCard,
     hrToCard,
